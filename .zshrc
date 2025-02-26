@@ -2,7 +2,7 @@
 # export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 
 # Path to your Oh My Zsh installation.
-export ZSH=$HOME/.oh-my-zsh
+export ZSH="$HOME/.oh-my-zsh"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time Oh My Zsh is loaded, in which case,
@@ -11,7 +11,7 @@ export ZSH=$HOME/.oh-my-zsh
 ZSH_THEME="darkblood"
 
 # Set list of themes to pick from when loading at random
-# Setting this variable when ZSH_THEME="archcraft"
+# Setting this variable when ZSH_THEME=random will cause zsh to load
 # a theme from this variable instead of looking in $ZSH/themes/
 # If set to an empty array, this variable will have no effect.
 # ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
@@ -24,7 +24,7 @@ ZSH_THEME="darkblood"
 # HYPHEN_INSENSITIVE="true"
 
 # Uncomment one of the following lines to change the auto-update behavior
-zstyle ':omz:update' mode disabled  # disable automatic updates
+# zstyle ':omz:update' mode disabled  # disable automatic updates
 # zstyle ':omz:update' mode auto      # update automatically without asking
 # zstyle ':omz:update' mode reminder  # just remind me to update when it's time
 
@@ -70,8 +70,7 @@ zstyle ':omz:update' mode disabled  # disable automatic updates
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
-
+# plugins=(git)
 source $ZSH/oh-my-zsh.sh
 
 # User configuration
@@ -103,34 +102,104 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-# On-demand rehash
-zshcache_time="$(date +%s%N)"
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 
-autoload -Uz add-zsh-hook
+########################################################################
 
-rehash_precmd() {
-  if [[ -a /var/cache/zsh/pacman ]]; then
-    local paccache_time="$(date -r /var/cache/zsh/pacman +%s%N)"
-    if (( zshcache_time < paccache_time )); then
-      rehash
-      zshcache_time="$paccache_time"
-    fi
-  fi
-}
+########################################################################
+# Tilix VTE
+if [ $TILIX_ID ] || [ $VTE_VERSION ]; then
+        source /etc/profile.d/vte.sh
+fi
 
-add-zsh-hook -Uz precmd rehash_precmd
+# enable auto-suggestions based on the history       
+if [ -f /home/oxyc0don/.zsh/zsh-autosuggestions/zsh-autosuggestions.plugin.zsh ]; then
+    source ~/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+    # change suggestion color
+    ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=#999'
+else
+#	git clone https://github.com/zsh-users/zsh-autosuggestions /home/$USER/.zsh/zsh-autosuggestions
+#	echo
+#	echo "# zsh-autosuggestions installed"
+#	source /home/$USER/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+#	source /home/$USER/.zshrc
+#	echo
+fi
 
-# omz
-alias zshconfig="geany ~/.zshrc"
-alias ohmyzsh="thunar ~/.oh-my-zsh"
+#################################################################################################
+#########   Environment       ###################################################################
+#################################################################################################
 
-# ls
-alias ls='ls -la --group-directories-first --color=auto'
-#alias l='ls -lh'
+# env
+export EDITOR='/usr/bin/nano'
 
-# git
-alias gcl='git clone --depth 1'
-alias gi='git init'
-alias ga='git add'
-alias gc='git commit -m'
-alias gp='git push origin master'
+#################################################################################################
+#########    Alias      #########################################################################
+#################################################################################################
+
+alias ls='ls -al --color=auto'
+alias la='ls -A'
+alias l='ls -CF'
+
+#################################################################################################
+#########    Colorize and add text parameters       #############################################
+#################################################################################################
+
+blk=$(tput setaf 0) # black
+red=$(tput setaf 1) # red
+grn=$(tput setaf 2) # green
+ylw=$(tput setaf 3) # yellow
+blu=$(tput setaf 4) # blue
+mga=$(tput setaf 5) # magenta
+cya=$(tput setaf 6) # cyan
+wht=$(tput setaf 7) # white
+#
+txtbld=$(tput bold) # Bold
+bldblk=${txtbld}$(tput setaf 0) # black
+bldred=${txtbld}$(tput setaf 1) # red
+bldgrn=${txtbld}$(tput setaf 2) # green
+bldylw=${txtbld}$(tput setaf 3) # yellow
+bldblu=${txtbld}$(tput setaf 4) # blue
+bldmga=${txtbld}$(tput setaf 5) # magenta
+bldcya=${txtbld}$(tput setaf 6) # cyan
+bldwht=${txtbld}$(tput setaf 7) # white
+txtrst=$(tput sgr0) # Reset
+                                                              
+#########      BANNER      ########################################################################
+###################################################################################################
+
+show_date=$(date |  cut -c -15)
+cpu_type=$(lscpu | grep "Model name:" | cut -c 24-)
+cpu_cores=$(lscpu | grep "^CPU(s)" | cut -c 24-)
+block_dev=$(echo -e "${Yellow}Block Devices: \n${Green}$(lsblk | grep "sd." | awk '{print "'${Red}'> '${Green}'"$1" '${Yellow}'Type: '${Green}'"$6" '${Yellow}'Size: '${Green}'"$4" '${Green}'"$7}' | column -t | sed 's/>/    >/')")
+kversion=$(uname -srm)
+shell="$SHELL"
+gpu_temp=$(echo -e "$(sensors | grep "temp1:" | cut -c 16-22)")
+cpu_temp=$(echo -e "$(sensors | grep "Package id 0:" | cut -c 17-23)")
+ip_public=$(dig +short myip.opendns.com @resolver1.opendns.com)
+ip_local=$(ip address | grep 'inet ' | grep 'scope global' | grep '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' -o | head -1)
+
+#####################################################################################################
+##########    BANNER    #############################################################################
+echo
+echo
+#echo "               		      $red $show_date                         ${txtrst}"
+echo "${bldwht}		  ██████  ██░ ██ ▓█████  ██▓     ██▓     ██░ ██ ▓█████  ██▓     ██▓    ${bldwht}"
+echo "${bldwht}		▒██    ▒ ▓██░ ██▒▓█   ▀ ▓██▒    ▓██▒    ▓██░ ██▒▓█   ▀ ▓██▒    ▓██▒    ${bldwht}"
+echo "${bldwht}		░ ▓██▄   ▒██▀▀██░▒███   ▒██░    ▒██░    ▒██▀▀██░▒███   ▒██░    ▒██░    ${bldwht}"
+echo "${bldwht}		  ▒   ██▒░▓█ ░██ ▒▓█  ▄ ▒██░    ▒██░    ░▓█ ░██ ▒▓█  ▄ ▒██░    ▒██░    ${bldwht}"
+echo "${bldwht}		▒██████▒▒░▓█▒░██▓░▒████▒░██████▒░██████▒░▓█▒░██▓░▒████▒░██████▒░██████▒${bldwht}"
+echo "${bldwht}		▒ ▒▓▒ ▒ ░ ▒ ░░▒░▒░░ ▒░ ░░ ▒░▓  ░░ ▒░▓  ░ ▒ ░░▒░▒░░ ▒░ ░░ ▒░▓  ░░ ▒░▓  ░${bldwht}"
+echo "${bldwht}		░ ░▒  ░ ░ ▒ ░▒░ ░ ░ ░  ░░ ░ ▒  ░░ ░ ▒  ░ ▒ ░▒░ ░ ░ ░  ░░ ░ ▒  ░░ ░ ▒  ░${bldwht}"
+echo "${bldwht}		░  ░  ░   ░  ░░ ░   ░     ░ ░     ░ ░    ░  ░░ ░   ░     ░ ░     ░ ░   ${bldwht}"
+echo "${bldwht}		      ░   ░  ░  ░   ░  ░    ░  ░    ░  ░ ░  ░  ░   ░  ░    ░  ░    ░  ░${bldwht}"
+echo ""
+#echo ""
+echo "		      			$bldwht [$kversion] $txtrst"
+echo "		               		       $red $show_date                         ${txtrst}"
+echo "${bldwht}				public:$txtrst$red $ip_public  ${bldwht} local:$txtrst$red $ip_local"
+echo ""
+echo ""         
+#########################################################################################################
+#########      END        ###############################################################################
+#########################################################################################################
